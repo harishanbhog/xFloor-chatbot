@@ -14,7 +14,7 @@ npm install
 ## Run
 
 ```bash
-export XFLOOR_API_KEY="your_bearer_token"
+export XFLOOR_API_KEY="your_token_or_bearer_token"
 export XFLOOR_APP_ID="student_portal"
 npm start
 ```
@@ -27,7 +27,7 @@ Open `http://localhost:3000`.
 - Use only the raw token value (with or without `Bearer` prefix; code normalizes it).
 - `XFLOOR_APP_ID` is **required**.
 - Server now fails fast if either one is missing.
-- SDK wrapper configures bearer auth on the SDK client and forces a valid `app_id` per request.
+- SDK wrapper configures bearer auth through common SDK auth surfaces (`apiClient.defaultHeaders`, `apiClient.authentications`, `ApiClient.instance`) and forces a valid `app_id` per request.
 
 ## What changed from chatbot-only flow
 

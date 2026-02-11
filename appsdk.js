@@ -29,33 +29,58 @@ function buildAuthHeader(token) {
   return `Bearer ${token}`;
 }
 
+function applyAuthToApiClient(apiClient, token) {
+  if (!apiClient || !token) {
+    return;
+  }
+
+  const authHeader = buildAuthHeader(token);
+
+  if (apiClient.defaultHeaders && typeof apiClient.defaultHeaders === 'object') {
+    apiClient.defaultHeaders.Authorization = authHeader;
+  }
+
+  if (apiClient.authentications && typeof apiClient.authentications === 'object') {
+    const authNames = ['bearerAuth', 'BearerAuth', 'api_key', 'ApiKeyAuth'];
+    for (const name of authNames) {
+      const auth = apiClient.authentications[name];
+      if (!auth || typeof auth !== 'object') {
+        continue;
+      }
+
+      if ('apiKeyPrefix' in auth) {
+        auth.apiKeyPrefix = 'Bearer';
+      }
+
+      if ('apiKey' in auth) {
+        auth.apiKey = token;
+      }
+
+      if ('accessToken' in auth) {
+        auth.accessToken = token;
+      }
+    }
+  }
+}
+
 function buildSdkClients(loaded, token) {
-  const { EventApi, QueryApi, Configuration } = loaded;
+  const { EventApi, QueryApi, ApiClient } = loaded;
 
   if (typeof EventApi !== 'function' || typeof QueryApi !== 'function') {
     throw new Error('Invalid @xfloor/floor-memory-sdk-js exports: EventApi/QueryApi not found.');
   }
 
-  if (typeof Configuration === 'function') {
-    const authHeader = buildAuthHeader(token);
-    const config = new Configuration({
-      apiKey: token,
-      accessToken: token,
-      headers: {
-        Authorization: authHeader
-      }
-    });
+  const eventApi = new EventApi();
+  const queryApi = new QueryApi();
 
-    return {
-      eventApi: new EventApi(config),
-      queryApi: new QueryApi(config)
-    };
+  // Apply auth in multiple common OpenAPI SDK locations.
+  applyAuthToApiClient(eventApi.apiClient, token);
+  applyAuthToApiClient(queryApi.apiClient, token);
+  if (ApiClient?.instance) {
+    applyAuthToApiClient(ApiClient.instance, token);
   }
 
-  return {
-    eventApi: new EventApi(),
-    queryApi: new QueryApi()
-  };
+  return { eventApi, queryApi };
 }
 
 class XFloorMemorySDK {
@@ -143,5 +168,6 @@ module.exports = {
   XFloorMemorySDK,
   buildEventInput,
   buildQueryRequest,
-  normalizeToken
+  normalizeToken,
+  applyAuthToApiClient
 };
