@@ -1,18 +1,65 @@
 const SDK_PACKAGE_NAME = '@xfloor/floor-memory-sdk-js';
 
 function resolveFactory(mod) {
-  return mod?.FloorMemoryClient || mod?.XFloorClient || mod?.Client || mod?.default || mod;
+  return (
+    mod?.FloorMemoryClient ||
+    mod?.XFloorClient ||
+    mod?.Client ||
+    mod?.MemoryClient ||
+    mod?.default ||
+    mod
+  );
 }
 
-function callMethod(client, candidateNames, payload) {
+function getByPath(target, dottedPath) {
+  return dottedPath.split('.').reduce((obj, segment) => obj?.[segment], target);
+}
+
+function parseOverride(envValue) {
+  if (!envValue) {
+    return [];
+  }
+
+  return envValue
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function callCandidates(client, candidateNames, payload, actionName) {
   for (const name of candidateNames) {
-    if (typeof client?.[name] === 'function') {
-      return client[name](payload);
+    const fn = getByPath(client, name);
+    if (typeof fn !== 'function') {
+      continue;
+    }
+
+    const fnOwnerPath = name.includes('.') ? name.split('.').slice(0, -1).join('.') : null;
+    const fnOwner = fnOwnerPath ? getByPath(client, fnOwnerPath) : client;
+
+    try {
+      return fn.call(fnOwner, payload);
+    } catch {
+      try {
+        return fn.call(fnOwner, {
+          ...payload,
+          action: actionName,
+          event: payload,
+          query: payload
+        });
+      } catch {
+        // Try 2nd signature style: (actionName, payload)
+      }
+
+      try {
+        return fn.call(fnOwner, actionName, payload);
+      } catch {
+        // Continue to next candidate.
+      }
     }
   }
 
   throw new Error(
-    `Installed ${SDK_PACKAGE_NAME}, but no compatible method found. Tried: ${candidateNames.join(', ')}`
+    `Installed ${SDK_PACKAGE_NAME}, but no compatible method found for ${actionName}. Tried: ${candidateNames.join(', ')}`
   );
 }
 
@@ -21,6 +68,40 @@ class AppSDK {
     this.baseUrl = (baseUrl || 'https://api.xfloor.ai').replace(/\/$/, '');
     this.apiKey = apiKey || '';
     this.agentId = agentId || '';
+
+    const eventOverride = parseOverride(process.env.XFLOOR_SDK_EVENT_METHODS);
+    const queryOverride = parseOverride(process.env.XFLOOR_SDK_QUERY_METHODS);
+
+    this.eventMethods = [
+      ...eventOverride,
+      'event',
+      'sendEvent',
+      'postEvent',
+      'createEvent',
+      'events.create',
+      'events.send',
+      'memory.event',
+      'memory.events.create',
+      'track',
+      'trackEvent',
+      'ingestEvent',
+      'request'
+    ];
+
+    this.queryMethods = [
+      ...queryOverride,
+      'query',
+      'sendQuery',
+      'postQuery',
+      'createQuery',
+      'queries.create',
+      'queries.send',
+      'memory.query',
+      'memory.queries.create',
+      'ask',
+      'askQuery',
+      'request'
+    ];
 
     let loaded;
     try {
@@ -61,7 +142,7 @@ class AppSDK {
       timestamp
     };
 
-    return callMethod(this.client, ['event', 'sendEvent', 'postEvent', 'createEvent'], payload);
+    return callCandidates(this.client, this.eventMethods, payload, 'event');
   }
 
   async query({ sessionId, query }) {
@@ -71,7 +152,7 @@ class AppSDK {
       query
     };
 
-    return callMethod(this.client, ['query', 'sendQuery', 'postQuery', 'createQuery'], payload);
+    return callCandidates(this.client, this.queryMethods, payload, 'query');
   }
 }
 

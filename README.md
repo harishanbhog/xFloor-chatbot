@@ -31,4 +31,5 @@ For each user message:
 - Keep API key on server side only.
 - `appsdk.js` is the single integration layer for `@xfloor/floor-memory-sdk-js`.
 - Chat flow still uses only Event + Query semantics.
+- If your SDK uses different method names, set `XFLOOR_SDK_EVENT_METHODS` and `XFLOOR_SDK_QUERY_METHODS` (comma-separated dotted paths, e.g. `events.create,memory.event`) to override auto-detection.
 - If your environment cannot access npm registry (403), install the SDK on a machine/network with npm access and copy `node_modules` or use an internal npm proxy.
