@@ -15,6 +15,15 @@ function getByPath(target, dottedPath) {
   return dottedPath.split('.').reduce((obj, segment) => obj?.[segment], target);
 }
 
+
+function withOptionalAgent(payload, agentId) {
+  if (!agentId) {
+    return payload;
+  }
+
+  return { ...payload, agentId };
+}
+
 function parseOverride(envValue) {
   if (!envValue) {
     return [];
@@ -119,13 +128,13 @@ class AppSDK {
         this.client = new Factory({
           baseUrl: this.baseUrl,
           apiKey: this.apiKey,
-          agentId: this.agentId
+          ...(this.agentId ? { agentId: this.agentId } : {})
         });
       } catch {
         this.client = Factory({
           baseUrl: this.baseUrl,
           apiKey: this.apiKey,
-          agentId: this.agentId
+          ...(this.agentId ? { agentId: this.agentId } : {})
         });
       }
     } else {
@@ -134,23 +143,21 @@ class AppSDK {
   }
 
   async event({ sessionId, text, type = 'user_message', timestamp = new Date().toISOString() }) {
-    const payload = {
-      agentId: this.agentId,
+    const payload = withOptionalAgent({
       sessionId,
       type,
       text,
       timestamp
-    };
+    }, this.agentId);
 
     return callCandidates(this.client, this.eventMethods, payload, 'event');
   }
 
   async query({ sessionId, query }) {
-    const payload = {
-      agentId: this.agentId,
+    const payload = withOptionalAgent({
       sessionId,
       query
-    };
+    }, this.agentId);
 
     return callCandidates(this.client, this.queryMethods, payload, 'query');
   }

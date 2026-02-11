@@ -11,11 +11,19 @@ This is a minimal chatbot demo that only uses two xFloor APIs:
 npm install
 export XFLOOR_BASE_URL="https://api.xfloor.ai"
 export XFLOOR_API_KEY="your_api_key"
-export XFLOOR_AGENT_ID="your_agent_id"
+export XFLOOR_AGENT_ID="your_agent_id"   # optional if your SDK/workspace requires agent scoping
 npm start
 ```
 
 Open `http://localhost:3000`.
+
+## Environment variables
+
+- `XFLOOR_BASE_URL` (required): xFloor API base URL.
+- `XFLOOR_API_KEY` (required): API key for SDK auth.
+- `XFLOOR_AGENT_ID` (optional): only needed when your memory SDK/workspace requires explicit agent scoping.
+- `XFLOOR_SDK_EVENT_METHODS` (optional): comma-separated method path overrides for event calls.
+- `XFLOOR_SDK_QUERY_METHODS` (optional): comma-separated method path overrides for query calls.
 
 ## Request flow
 

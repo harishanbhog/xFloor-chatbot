@@ -58,13 +58,6 @@ function getReplyText(queryResponse) {
 }
 
 async function handleChat(req, res) {
-  if (!XFLOOR_AGENT_ID) {
-    sendJson(res, 500, {
-      error: 'Missing XFLOOR_AGENT_ID environment variable.'
-    });
-    return;
-  }
-
   let body;
 
   try {
