@@ -24,9 +24,10 @@ Open `http://localhost:3000`.
 ## Auth requirements
 
 - `XFLOOR_API_KEY` is **required**.
+- Use only the raw token value (with or without `Bearer` prefix; code normalizes it).
 - `XFLOOR_APP_ID` is **required**.
 - Server now fails fast if either one is missing.
-- SDK wrapper explicitly injects auth values into Event metadata and Query payload, and also attempts SDK client configuration with Bearer token when supported.
+- SDK wrapper configures bearer auth on the SDK client and forces a valid `app_id` per request.
 
 ## What changed from chatbot-only flow
 

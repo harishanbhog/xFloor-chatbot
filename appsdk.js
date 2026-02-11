@@ -16,7 +16,20 @@ function parseJson(value, fallback = {}) {
   }
 }
 
-function buildSdkClients(loaded, apiKey) {
+function normalizeToken(rawToken) {
+  const token = String(rawToken || '').trim();
+  if (!token) {
+    return '';
+  }
+
+  return token.replace(/^Bearer\s+/i, '').trim();
+}
+
+function buildAuthHeader(token) {
+  return `Bearer ${token}`;
+}
+
+function buildSdkClients(loaded, token) {
   const { EventApi, QueryApi, Configuration } = loaded;
 
   if (typeof EventApi !== 'function' || typeof QueryApi !== 'function') {
@@ -24,11 +37,12 @@ function buildSdkClients(loaded, apiKey) {
   }
 
   if (typeof Configuration === 'function') {
+    const authHeader = buildAuthHeader(token);
     const config = new Configuration({
-      apiKey,
-      accessToken: apiKey,
+      apiKey: token,
+      accessToken: token,
       headers: {
-        Authorization: `Bearer ${apiKey}`
+        Authorization: authHeader
       }
     });
 
@@ -46,8 +60,8 @@ function buildSdkClients(loaded, apiKey) {
 
 class XFloorMemorySDK {
   constructor({ appId, apiKey }) {
-    this.appId = appId;
-    this.apiKey = apiKey;
+    this.appId = String(appId || '').trim();
+    this.apiKey = normalizeToken(apiKey);
 
     if (!this.apiKey) {
       throw new Error('Missing XFLOOR_API_KEY. Set it before starting the server.');
@@ -65,10 +79,8 @@ class XFloorMemorySDK {
 
   event(inputInfo, metadata = {}) {
     const mergedMetadata = {
-      app_id: this.appId,
-      authorization: `Bearer ${this.apiKey}`,
-      api_key: this.apiKey,
-      ...metadata
+      ...metadata,
+      app_id: this.appId
     };
 
     return new Promise((resolve, reject) => {
@@ -84,10 +96,8 @@ class XFloorMemorySDK {
 
   query(request = {}) {
     const payload = {
-      app_id: this.appId,
-      authorization: `Bearer ${this.apiKey}`,
-      api_key: this.apiKey,
-      ...request
+      ...request,
+      app_id: this.appId
     };
 
     return new Promise((resolve, reject) => {
@@ -132,5 +142,6 @@ function buildQueryRequest({ userId, query, floorIds, k, includeMetadata, summar
 module.exports = {
   XFloorMemorySDK,
   buildEventInput,
-  buildQueryRequest
+  buildQueryRequest,
+  normalizeToken
 };
