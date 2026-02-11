@@ -13,90 +13,83 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background: radial-gradient(circle at top, #1d2230, var(--bg));
   color: var(--text);
-  display: grid;
-  place-items: center;
   padding: 24px;
 }
 
-.chat-app {
-  width: min(760px, 100%);
-  background: color-mix(in oklab, var(--panel) 92%, white 8%);
-  border: 1px solid #2a3042;
-  border-radius: 14px;
-  padding: 18px;
+.app {
+  width: min(1200px, 100%);
+  margin: 0 auto;
 }
 
-h1 {
-  margin: 0 0 8px;
-}
-
-.subtitle,
-.hint {
-  margin: 0 0 12px;
+.subtitle {
   color: var(--muted);
 }
 
-.messages {
-  min-height: 360px;
-  max-height: 60vh;
-  overflow-y: auto;
-  background: #10141e;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.panel {
+  background: color-mix(in oklab, var(--panel) 92%, white 8%);
   border: 1px solid #2a3042;
-  border-radius: 10px;
+  border-radius: 14px;
   padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
-.msg {
-  max-width: 80%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  line-height: 1.4;
-  white-space: pre-wrap;
+form {
+  display: grid;
+  gap: 8px;
 }
 
-.msg.user {
-  align-self: flex-end;
-  background: #214264;
-}
-
-.msg.bot {
-  align-self: flex-start;
-  background: #253029;
-}
-
-.msg.system {
-  align-self: center;
-  background: #372e1b;
-}
-
-.chat-form {
-  display: flex;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-#message-input {
-  flex: 1;
-  border-radius: 10px;
+input,
+textarea,
+button {
+  border-radius: 8px;
   border: 1px solid #2a3042;
   background: #0f1320;
   color: var(--text);
-  padding: 10px 12px;
+  padding: 10px;
+  font: inherit;
+}
+
+textarea {
+  min-height: 84px;
 }
 
 button {
-  border: 0;
-  border-radius: 10px;
   background: var(--accent);
   color: #051426;
   font-weight: 700;
-  padding: 10px 16px;
+  border: none;
   cursor: pointer;
+}
+
+.result {
+  margin-top: 12px;
+  white-space: pre-wrap;
+  background: #10141e;
+  border: 1px solid #2a3042;
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 84px;
+}
+
+.answer {
+  margin-top: 12px;
+  padding: 10px;
+  background: #203a2e;
+  border: 1px solid #37634f;
+  border-radius: 8px;
+  min-height: 42px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }

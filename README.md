@@ -1,43 +1,61 @@
-# xFloor Event + Query Chatbot
+# xFloor Memory SDK Demo (Event + Query)
 
-This is a minimal chatbot demo that only uses two xFloor APIs:
+This project now follows the xFloor JavaScript SDK pattern where:
 
-1. `POST /event` - logs a user message event.
-2. `POST /query` - requests an AI reply for that message.
+1. **Event API** is used to ingest content into memory.
+2. **Query API** is used later to ask questions and get summary/answers from ingested content.
 
-## Setup
+## Install
 
 ```bash
 npm install
-export XFLOOR_BASE_URL="https://api.xfloor.ai"
-export XFLOOR_API_KEY="your_api_key"
-export XFLOOR_AGENT_ID="your_agent_id"   # optional if your SDK/workspace requires agent scoping
+```
+
+## Run
+
+```bash
+export XFLOOR_APP_ID="student_portal" # optional, also can be provided in event metadata / query payload
 npm start
 ```
 
 Open `http://localhost:3000`.
 
-## Environment variables
+## What changed from chatbot-only flow
 
-- `XFLOOR_BASE_URL` (required): xFloor API base URL.
-- `XFLOOR_API_KEY` (required): API key for SDK auth.
-- `XFLOOR_AGENT_ID` (optional): only needed when your memory SDK/workspace requires explicit agent scoping.
-- `XFLOOR_SDK_EVENT_METHODS` (optional): comma-separated method path overrides for event calls.
-- `XFLOOR_SDK_QUERY_METHODS` (optional): comma-separated method path overrides for query calls.
+- This is not just a plain chat endpoint anymore.
+- `POST /api/event`: accepts content fields (`floor_id`, `block_id`, etc.) and ingests via SDK `EventApi.event(...)`.
+- `POST /api/query`: asks questions via SDK `QueryApi.query(...)`.
+- Frontend has two explicit workflows:
+  - Ingest content
+  - Query ingested content
 
-## Request flow
+## API payloads used by backend
 
-For each user message:
+### Event ingestion (`POST /api/event`)
+Required body fields:
+- `floorId`, `blockId`, `blockType`, `userId`, `title`, `description`
 
-1. Browser sends message to local endpoint `POST /api/chat`.
-2. Server forwards message using `@xfloor/floor-memory-sdk-js` Event method.
-3. Server asks for reply using `@xfloor/floor-memory-sdk-js` Query method.
-4. Server returns the query reply to browser.
+Optional:
+- `metadata` (object passed as second arg to `eventApi.event`)
+- `extraJson` (merged into `inputInfo` JSON)
+
+### Query (`POST /api/query`)
+Required body fields:
+- `userId`, `query`
+
+Optional:
+- `floorIds` (comma-separated string)
+- `k`
+- `includeMetadata` (boolean -> `include_metadata`)
+- `summaryNeeded` (boolean -> `summary_needed`)
+- `extraJson` (merged into query payload)
+
+## SDK usage
+
+- `appsdk.js` directly uses `EventApi` and `QueryApi` from `@xfloor/floor-memory-sdk-js`.
+- Calls are wrapped into Promises but preserve SDK callback behavior under the hood.
 
 ## Notes
 
-- Keep API key on server side only.
-- `appsdk.js` is the single integration layer for `@xfloor/floor-memory-sdk-js`.
-- Chat flow still uses only Event + Query semantics.
-- If your SDK uses different method names, set `XFLOOR_SDK_EVENT_METHODS` and `XFLOOR_SDK_QUERY_METHODS` (comma-separated dotted paths, e.g. `events.create,memory.event`) to override auto-detection.
-- If your environment cannot access npm registry (403), install the SDK on a machine/network with npm access and copy `node_modules` or use an internal npm proxy.
+- If npm install fails due network policy on your environment, run locally on your machine with npm registry access.
+- You can still pass `app_id` explicitly in metadata/payload per request if needed.

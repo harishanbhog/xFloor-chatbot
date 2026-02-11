@@ -1,166 +1,94 @@
-const SDK_PACKAGE_NAME = '@xfloor/floor-memory-sdk-js';
-
-function resolveFactory(mod) {
-  return (
-    mod?.FloorMemoryClient ||
-    mod?.XFloorClient ||
-    mod?.Client ||
-    mod?.MemoryClient ||
-    mod?.default ||
-    mod
-  );
-}
-
-function getByPath(target, dottedPath) {
-  return dottedPath.split('.').reduce((obj, segment) => obj?.[segment], target);
-}
-
-
-function withOptionalAgent(payload, agentId) {
-  if (!agentId) {
-    return payload;
-  }
-
-  return { ...payload, agentId };
-}
-
-function parseOverride(envValue) {
-  if (!envValue) {
-    return [];
-  }
-
-  return envValue
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function callCandidates(client, candidateNames, payload, actionName) {
-  for (const name of candidateNames) {
-    const fn = getByPath(client, name);
-    if (typeof fn !== 'function') {
-      continue;
-    }
-
-    const fnOwnerPath = name.includes('.') ? name.split('.').slice(0, -1).join('.') : null;
-    const fnOwner = fnOwnerPath ? getByPath(client, fnOwnerPath) : client;
-
-    try {
-      return fn.call(fnOwner, payload);
-    } catch {
-      try {
-        return fn.call(fnOwner, {
-          ...payload,
-          action: actionName,
-          event: payload,
-          query: payload
-        });
-      } catch {
-        // Try 2nd signature style: (actionName, payload)
-      }
-
-      try {
-        return fn.call(fnOwner, actionName, payload);
-      } catch {
-        // Continue to next candidate.
-      }
-    }
-  }
-
-  throw new Error(
-    `Installed ${SDK_PACKAGE_NAME}, but no compatible method found for ${actionName}. Tried: ${candidateNames.join(', ')}`
-  );
-}
-
-class AppSDK {
-  constructor({ baseUrl, apiKey, agentId }) {
-    this.baseUrl = (baseUrl || 'https://api.xfloor.ai').replace(/\/$/, '');
-    this.apiKey = apiKey || '';
-    this.agentId = agentId || '';
-
-    const eventOverride = parseOverride(process.env.XFLOOR_SDK_EVENT_METHODS);
-    const queryOverride = parseOverride(process.env.XFLOOR_SDK_QUERY_METHODS);
-
-    this.eventMethods = [
-      ...eventOverride,
-      'event',
-      'sendEvent',
-      'postEvent',
-      'createEvent',
-      'events.create',
-      'events.send',
-      'memory.event',
-      'memory.events.create',
-      'track',
-      'trackEvent',
-      'ingestEvent',
-      'request'
-    ];
-
-    this.queryMethods = [
-      ...queryOverride,
-      'query',
-      'sendQuery',
-      'postQuery',
-      'createQuery',
-      'queries.create',
-      'queries.send',
-      'memory.query',
-      'memory.queries.create',
-      'ask',
-      'askQuery',
-      'request'
-    ];
-
-    let loaded;
-    try {
-      loaded = require(SDK_PACKAGE_NAME);
-    } catch (error) {
-      throw new Error(
-        `Missing dependency ${SDK_PACKAGE_NAME}. Run: npm install ${SDK_PACKAGE_NAME}. Original: ${error.message}`
-      );
-    }
-
-    const Factory = resolveFactory(loaded);
-
-    if (typeof Factory === 'function') {
-      try {
-        this.client = new Factory({
-          baseUrl: this.baseUrl,
-          apiKey: this.apiKey,
-          ...(this.agentId ? { agentId: this.agentId } : {})
-        });
-      } catch {
-        this.client = Factory({
-          baseUrl: this.baseUrl,
-          apiKey: this.apiKey,
-          ...(this.agentId ? { agentId: this.agentId } : {})
-        });
-      }
-    } else {
-      this.client = loaded;
-    }
-  }
-
-  async event({ sessionId, text, type = 'user_message', timestamp = new Date().toISOString() }) {
-    const payload = withOptionalAgent({
-      sessionId,
-      type,
-      text,
-      timestamp
-    }, this.agentId);
-
-    return callCandidates(this.client, this.eventMethods, payload, 'event');
-  }
-
-  async query({ sessionId, query }) {
-    const payload = withOptionalAgent({
-      sessionId,
-      query
-    }, this.agentId);
-
-    return callCandidates(this.client, this.queryMethods, payload, 'query');
+function loadSdkModule() {
+  try {
+    return require('@xfloor/floor-memory-sdk-js');
+  } catch (error) {
+    throw new Error(
+      `Missing dependency @xfloor/floor-memory-sdk-js. Run: npm install @xfloor/floor-memory-sdk-js. Original: ${error.message}`
+    );
   }
 }
 
-module.exports = { AppSDK };
+function parseJson(value, fallback = {}) {
+  try {
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+class XFloorMemorySDK {
+  constructor({ appId }) {
+    this.appId = appId;
+
+    const { EventApi, QueryApi } = loadSdkModule();
+    this.eventApi = new EventApi();
+    this.queryApi = new QueryApi();
+  }
+
+  event(inputInfo, metadata = {}) {
+    const mergedMetadata = {
+      ...(this.appId ? { app_id: this.appId } : {}),
+      ...metadata
+    };
+
+    return new Promise((resolve, reject) => {
+      this.eventApi.event(inputInfo, mergedMetadata, (error, data) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(data);
+      });
+    });
+  }
+
+  query(request = {}) {
+    const payload = {
+      ...(this.appId ? { app_id: this.appId } : {}),
+      ...request
+    };
+
+    return new Promise((resolve, reject) => {
+      this.queryApi.query(payload, (error, data) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(data);
+      });
+    });
+  }
+}
+
+function buildEventInput({ floorId, blockId, blockType, userId, title, description, extraJson }) {
+  return JSON.stringify({
+    floor_id: floorId,
+    block_id: blockId,
+    block_type: blockType,
+    user_id: userId,
+    title,
+    description,
+    ...parseJson(extraJson)
+  });
+}
+
+function buildQueryRequest({ userId, query, floorIds, k, includeMetadata, summaryNeeded, extraJson }) {
+  return {
+    user_id: userId,
+    query,
+    floor_ids: (floorIds || '')
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean),
+    ...(k ? { k: Number(k) } : {}),
+    include_metadata: includeMetadata ? '1' : '0',
+    summary_needed: summaryNeeded ? '1' : '0',
+    ...parseJson(extraJson)
+  };
+}
+
+module.exports = {
+  XFloorMemorySDK,
+  buildEventInput,
+  buildQueryRequest
+};

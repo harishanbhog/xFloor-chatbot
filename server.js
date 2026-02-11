@@ -1,29 +1,20 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { AppSDK } = require('./appsdk');
+const { XFloorMemorySDK, buildEventInput, buildQueryRequest } = require('./appsdk');
 
 const PORT = Number(process.env.PORT || 3000);
-const XFLOOR_BASE_URL = process.env.XFLOOR_BASE_URL || 'https://api.xfloor.ai';
-const XFLOOR_API_KEY = process.env.XFLOOR_API_KEY || '';
-const XFLOOR_AGENT_ID = process.env.XFLOOR_AGENT_ID || '';
+const XFLOOR_APP_ID = process.env.XFLOOR_APP_ID || '';
 
 const staticDir = path.join(__dirname, 'public');
-
-let appSdk;
+let sdkInstance;
 
 function getSdk() {
-  if (appSdk) {
-    return appSdk;
+  if (!sdkInstance) {
+    sdkInstance = new XFloorMemorySDK({ appId: XFLOOR_APP_ID });
   }
 
-  appSdk = new AppSDK({
-    baseUrl: XFLOOR_BASE_URL,
-    apiKey: XFLOOR_API_KEY,
-    agentId: XFLOOR_AGENT_ID
-  });
-
-  return appSdk;
+  return sdkInstance;
 }
 
 function sendJson(res, statusCode, payload) {
@@ -46,18 +37,7 @@ function readBody(req) {
   });
 }
 
-function getReplyText(queryResponse) {
-  return (
-    queryResponse?.answer ||
-    queryResponse?.result?.answer ||
-    queryResponse?.response?.text ||
-    queryResponse?.message ||
-    queryResponse?.data?.answer ||
-    'I received your message, but no text reply was found in Query response.'
-  );
-}
-
-async function handleChat(req, res) {
+async function handleEventIngestion(req, res) {
   let body;
 
   try {
@@ -67,36 +47,62 @@ async function handleChat(req, res) {
     return;
   }
 
-  const message = body?.message?.trim();
-  const sessionId = body?.sessionId || 'demo-session';
+  const required = ['floorId', 'blockId', 'blockType', 'userId', 'title', 'description'];
+  for (const key of required) {
+    if (!body?.[key]) {
+      sendJson(res, 400, { error: `${key} is required.` });
+      return;
+    }
+  }
 
-  if (!message) {
-    sendJson(res, 400, { error: 'message is required.' });
+  try {
+    const inputInfo = buildEventInput(body);
+    const result = await getSdk().event(inputInfo, body.metadata || {});
+
+    sendJson(res, 200, {
+      message: 'Event accepted',
+      eventResponse: result
+    });
+  } catch (error) {
+    sendJson(res, 502, {
+      error: error?.message || 'Event ingestion failed.',
+      details: error || null
+    });
+  }
+}
+
+async function handleQuery(req, res) {
+  let body;
+
+  try {
+    body = JSON.parse(await readBody(req));
+  } catch {
+    sendJson(res, 400, { error: 'Invalid JSON request body.' });
+    return;
+  }
+
+  if (!body?.userId) {
+    sendJson(res, 400, { error: 'userId is required.' });
+    return;
+  }
+
+  if (!body?.query) {
+    sendJson(res, 400, { error: 'query is required.' });
     return;
   }
 
   try {
-    const sdk = getSdk();
-
-    await sdk.event({
-      sessionId,
-      text: message,
-      type: 'user_message'
-    });
-
-    const queryResult = await sdk.query({
-      sessionId,
-      query: message
-    });
+    const queryRequest = buildQueryRequest(body);
+    const result = await getSdk().query(queryRequest);
 
     sendJson(res, 200, {
-      reply: getReplyText(queryResult),
-      rawQueryResponse: queryResult
+      answer: result?.answer || '',
+      queryResponse: result
     });
   } catch (error) {
     sendJson(res, 502, {
-      error: error.message,
-      details: error.details || null
+      error: error?.message || 'Query failed.',
+      details: error || null
     });
   }
 }
@@ -130,8 +136,13 @@ function serveStatic(req, res) {
 }
 
 const server = http.createServer((req, res) => {
-  if (req.method === 'POST' && req.url === '/api/chat') {
-    handleChat(req, res);
+  if (req.method === 'POST' && req.url === '/api/event') {
+    handleEventIngestion(req, res);
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/api/query') {
+    handleQuery(req, res);
     return;
   }
 
@@ -144,5 +155,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`xFloor chatbot running on http://localhost:${PORT}`);
+  console.log(`xFloor memory demo running on http://localhost:${PORT}`);
 });
