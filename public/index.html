@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xFloor Event + Query Chatbot</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="chat-app">
+      <h1>xFloor Chatbot</h1>
+      <p class="subtitle">This demo sends each user message to <code>/event</code> and gets a reply from <code>/query</code>.</p>
+
+      <section id="messages" class="messages" aria-live="polite"></section>
+
+      <form id="chat-form" class="chat-form">
+        <input id="message-input" name="message" type="text" placeholder="Ask something..." required />
+        <button type="submit">Send</button>
+      </form>
+
+      <p class="hint">Set <code>XFLOOR_BASE_URL</code>, <code>XFLOOR_API_KEY</code>, and <code>XFLOOR_AGENT_ID</code> before starting.</p>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
