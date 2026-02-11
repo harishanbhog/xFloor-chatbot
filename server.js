@@ -1,7 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { XFloorSDK } = require('./xfloor-sdk');
+const { AppSDK } = require('./appsdk');
 
 const PORT = Number(process.env.PORT || 3000);
 const XFLOOR_BASE_URL = process.env.XFLOOR_BASE_URL || 'https://api.xfloor.ai';
@@ -9,11 +9,22 @@ const XFLOOR_API_KEY = process.env.XFLOOR_API_KEY || '';
 const XFLOOR_AGENT_ID = process.env.XFLOOR_AGENT_ID || '';
 
 const staticDir = path.join(__dirname, 'public');
-const xfloor = new XFloorSDK({
-  baseUrl: XFLOOR_BASE_URL,
-  apiKey: XFLOOR_API_KEY,
-  agentId: XFLOOR_AGENT_ID
-});
+
+let appSdk;
+
+function getSdk() {
+  if (appSdk) {
+    return appSdk;
+  }
+
+  appSdk = new AppSDK({
+    baseUrl: XFLOOR_BASE_URL,
+    apiKey: XFLOOR_API_KEY,
+    agentId: XFLOOR_AGENT_ID
+  });
+
+  return appSdk;
+}
 
 function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, { 'Content-Type': 'application/json' });
@@ -72,13 +83,15 @@ async function handleChat(req, res) {
   }
 
   try {
-    await xfloor.event({
+    const sdk = getSdk();
+
+    await sdk.event({
       sessionId,
       text: message,
       type: 'user_message'
     });
 
-    const queryResult = await xfloor.query({
+    const queryResult = await sdk.query({
       sessionId,
       query: message
     });

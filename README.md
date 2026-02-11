@@ -22,13 +22,13 @@ Open `http://localhost:3000`.
 For each user message:
 
 1. Browser sends message to local endpoint `POST /api/chat`.
-2. Server forwards message to xFloor `POST /event`.
-3. Server then calls xFloor `POST /query`.
+2. Server forwards message using `@xfloor/floor-memory-sdk-js` Event method.
+3. Server asks for reply using `@xfloor/floor-memory-sdk-js` Query method.
 4. Server returns the query reply to browser.
 
 ## Notes
 
 - Keep API key on server side only.
-- Chat routing now uses a small SDK-style wrapper in `xfloor-sdk.js` and still calls only `/event` + `/query`.
-- I could not install an official xFloor npm SDK from this environment due registry access restrictions (403), so this local wrapper is used as the SDK layer.
-- The exact Event/Query payload shape can vary by workspace config; update payload fields in `xfloor-sdk.js` if needed.
+- `appsdk.js` is the single integration layer for `@xfloor/floor-memory-sdk-js`.
+- Chat flow still uses only Event + Query semantics.
+- If your environment cannot access npm registry (403), install the SDK on a machine/network with npm access and copy `node_modules` or use an internal npm proxy.
