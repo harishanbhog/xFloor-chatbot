@@ -16,18 +16,58 @@ function parseJson(value, fallback = {}) {
   }
 }
 
-class XFloorMemorySDK {
-  constructor({ appId }) {
-    this.appId = appId;
+function buildSdkClients(loaded, apiKey) {
+  const { EventApi, QueryApi, Configuration } = loaded;
 
-    const { EventApi, QueryApi } = loadSdkModule();
-    this.eventApi = new EventApi();
-    this.queryApi = new QueryApi();
+  if (typeof EventApi !== 'function' || typeof QueryApi !== 'function') {
+    throw new Error('Invalid @xfloor/floor-memory-sdk-js exports: EventApi/QueryApi not found.');
+  }
+
+  if (typeof Configuration === 'function') {
+    const config = new Configuration({
+      apiKey,
+      accessToken: apiKey,
+      headers: {
+        Authorization: `Bearer ${apiKey}`
+      }
+    });
+
+    return {
+      eventApi: new EventApi(config),
+      queryApi: new QueryApi(config)
+    };
+  }
+
+  return {
+    eventApi: new EventApi(),
+    queryApi: new QueryApi()
+  };
+}
+
+class XFloorMemorySDK {
+  constructor({ appId, apiKey }) {
+    this.appId = appId;
+    this.apiKey = apiKey;
+
+    if (!this.apiKey) {
+      throw new Error('Missing XFLOOR_API_KEY. Set it before starting the server.');
+    }
+
+    if (!this.appId) {
+      throw new Error('Missing XFLOOR_APP_ID. Set it before starting the server.');
+    }
+
+    const loaded = loadSdkModule();
+    const clients = buildSdkClients(loaded, this.apiKey);
+    this.eventApi = clients.eventApi;
+    this.queryApi = clients.queryApi;
   }
 
   event(inputInfo, metadata = {}) {
     const mergedMetadata = {
-      ...(this.appId ? { app_id: this.appId } : {}),
+      app_id: this.appId,
+      authorization: `Bearer ${this.apiKey}`,
+      api_key: this.apiKey,
       ...metadata
     };
 
@@ -44,7 +84,9 @@ class XFloorMemorySDK {
 
   query(request = {}) {
     const payload = {
-      ...(this.appId ? { app_id: this.appId } : {}),
+      app_id: this.appId,
+      authorization: `Bearer ${this.apiKey}`,
+      api_key: this.apiKey,
       ...request
     };
 

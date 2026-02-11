@@ -14,11 +14,19 @@ npm install
 ## Run
 
 ```bash
-export XFLOOR_APP_ID="student_portal" # optional, also can be provided in event metadata / query payload
+export XFLOOR_API_KEY="your_bearer_token"
+export XFLOOR_APP_ID="student_portal"
 npm start
 ```
 
 Open `http://localhost:3000`.
+
+## Auth requirements
+
+- `XFLOOR_API_KEY` is **required**.
+- `XFLOOR_APP_ID` is **required**.
+- Server now fails fast if either one is missing.
+- SDK wrapper explicitly injects auth values into Event metadata and Query payload, and also attempts SDK client configuration with Bearer token when supported.
 
 ## What changed from chatbot-only flow
 
@@ -58,4 +66,4 @@ Optional:
 ## Notes
 
 - If npm install fails due network policy on your environment, run locally on your machine with npm registry access.
-- You can still pass `app_id` explicitly in metadata/payload per request if needed.
+- You can still override `app_id` explicitly in metadata/payload per request if needed.

@@ -5,13 +5,14 @@ const { XFloorMemorySDK, buildEventInput, buildQueryRequest } = require('./appsd
 
 const PORT = Number(process.env.PORT || 3000);
 const XFLOOR_APP_ID = process.env.XFLOOR_APP_ID || '';
+const XFLOOR_API_KEY = process.env.XFLOOR_API_KEY || '';
 
 const staticDir = path.join(__dirname, 'public');
 let sdkInstance;
 
 function getSdk() {
   if (!sdkInstance) {
-    sdkInstance = new XFloorMemorySDK({ appId: XFLOOR_APP_ID });
+    sdkInstance = new XFloorMemorySDK({ appId: XFLOOR_APP_ID, apiKey: XFLOOR_API_KEY });
   }
 
   return sdkInstance;
