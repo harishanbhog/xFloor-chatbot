@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xFloor Memory SDK Demo (Event + Query)</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <h1>xFloor Memory SDK Demo</h1>
+      <p class="subtitle">Ingest content via Event API first, then ask queries to retrieve summary/answers later.</p>
+
+      <section class="grid">
+        <article class="panel">
+          <h2>1) Ingest Content (Event)</h2>
+          <form id="event-form">
+            <input name="floorId" placeholder="floor_id (e.g. institute_floor)" required />
+            <input name="blockId" placeholder="block_id" required />
+            <input name="blockType" placeholder="block_type (e.g. post)" required />
+            <input name="userId" placeholder="user_id" required />
+            <input name="title" placeholder="title" required />
+            <textarea name="description" placeholder="description" required></textarea>
+            <textarea name="extraJson" placeholder='extra event JSON (optional), e.g. {"tags":["notes"]}'></textarea>
+            <textarea name="metadataJson" placeholder='metadata JSON (optional), e.g. {"app_id":"student_portal"}'></textarea>
+            <button type="submit">Send Event</button>
+          </form>
+          <pre id="event-result" class="result"></pre>
+        </article>
+
+        <article class="panel">
+          <h2>2) Ask Query</h2>
+          <form id="query-form">
+            <input name="userId" placeholder="user_id" required />
+            <input name="query" placeholder="Ask about ingested content..." required />
+            <input name="floorIds" placeholder="floor_ids (comma separated)" />
+            <input name="k" type="number" min="1" placeholder="k (optional)" />
+            <label><input name="includeMetadata" type="checkbox" checked /> include_metadata=1</label>
+            <label><input name="summaryNeeded" type="checkbox" checked /> summary_needed=1</label>
+            <textarea name="extraJson" placeholder='extra query JSON (optional), e.g. {"language":"en"}'></textarea>
+            <button type="submit">Run Query</button>
+          </form>
+          <div id="answer" class="answer"></div>
+          <pre id="query-result" class="result"></pre>
+        </article>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
