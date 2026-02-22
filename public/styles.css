@@ -1,0 +1,18 @@
+body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; }
+.app-shell { max-width: 980px; margin: 0 auto; padding: 20px; }
+.topbar { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; }
+.tab { margin-left: 8px; padding: 8px 12px; }
+.tab.active { background: #2563eb; color: #fff; border: none; border-radius: 8px; }
+.panel { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-top: 16px; }
+.grid, .inline-grid { display: grid; gap: 10px; }
+.inline-grid { grid-template-columns: 1fr auto; }
+input, textarea, button { padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; }
+button { cursor: pointer; }
+.hidden { display: none; }
+.chat-box { min-height: 180px; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; padding: 10px; }
+.msg { margin: 8px 0; padding: 8px; border-radius: 6px; }
+.user { background: #dbeafe; }
+.assistant { background: #e5e7eb; }
+.feed { list-style: none; padding: 0; display: grid; gap: 10px; }
+.feed li { border: 1px solid #ddd; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; gap: 10px; }
+.status { color: #1d4ed8; }
