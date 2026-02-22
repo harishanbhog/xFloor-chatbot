@@ -51,7 +51,7 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 200, { items: store.events.slice(0, limit) })
   }
 
-  if (req.method === 'POST' && req.url === '/api/content') {
+  if (req.method === 'POST' && (req.url === '/api/content' || req.url === '/event')) {
     try {
       const { floor_id, block_id, block_type, user_id, title = '', description } = await parseBody(req)
       if (!floor_id || !block_id || !block_type || !user_id || !description) {

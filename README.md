@@ -4,7 +4,8 @@ A complete runnable MVP with a modern patient profile experience inspired by Pos
 
 ## Included flows
 
-- `POST /api/content` (Create Event)
+- `POST /event` (Create Event, primary submit endpoint)
+- `POST /api/content` (Create Event compatibility alias)
 - `POST /api/query` (Query)
 - `GET /api/recent` (Recent Events)
 
@@ -29,6 +30,6 @@ Open: `http://localhost:8787`
 
 - Frontend uses React + Tailwind from CDN for portability in restricted environments.
 - Backend (`server/index.js`) is SDK-ready: replace stub handlers with xFloor SDK calls:
-  - `/api/content` -> `EventApi`
+  - `/event` (or `/api/content`) -> `EventApi`
   - `/api/query` -> `QueryApi`
   - `/api/recent` -> `GetRecentEventsApi`
