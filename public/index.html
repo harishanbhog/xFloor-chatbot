@@ -3,58 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>xFloor MVP</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <title>xFloor Patient Profile MVP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              mint: '#33C39B',
+              brand: '#0E8F6E',
+              soft: '#F3F7FA'
+            },
+            boxShadow: {
+              card: '0 8px 30px rgba(31, 41, 55, 0.08)'
+            }
+          }
+        }
+      }
+    </script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <h1>xFloor Production MVP</h1>
-        <nav>
-          <button class="tab active" data-tab="compose">Compose</button>
-          <button class="tab" data-tab="chat">Chat</button>
-          <button class="tab" data-tab="activity">Activity</button>
-        </nav>
-      </header>
-
-      <main>
-        <section id="compose" class="panel">
-          <h2>Post Content (Create Event)</h2>
-          <form id="composeForm" class="grid">
-            <input name="floor_id" value="default-floor" required />
-            <input name="block_id" value="primary" required />
-            <input name="block_type" value="post" required />
-            <input name="user_id" value="demo-user-1" required />
-            <input name="title" placeholder="title (optional)" />
-            <textarea name="description" rows="4" placeholder="description" required></textarea>
-            <button type="submit">Submit content</button>
-          </form>
-          <p id="composeStatus" class="status"></p>
-        </section>
-
-        <section id="chat" class="panel hidden">
-          <h2>Query Assistant</h2>
-          <div class="inline-grid">
-            <input id="chatUser" value="demo-user-1" />
-            <input id="chatApp" value="demo-app" />
-          </div>
-          <div id="chatBox" class="chat-box"></div>
-          <form id="chatForm" class="inline-grid">
-            <input id="chatPrompt" placeholder="Ask a memory-aware question" required />
-            <button type="submit">Send</button>
-          </form>
-        </section>
-
-        <section id="activity" class="panel hidden">
-          <h2>Recent Events</h2>
-          <div class="inline-grid">
-            <button id="refresh">Refresh now</button>
-            <label><input type="checkbox" id="auto" checked /> Auto-refresh (5s)</label>
-          </div>
-          <ul id="feed" class="feed"></ul>
-        </section>
-      </main>
-    </div>
-    <script type="module" src="/app.js"></script>
+  <body class="bg-slate-100 text-slate-800">
+    <div id="root"></div>
+    <script type="text/babel" data-presets="react" src="/app.jsx"></script>
   </body>
 </html>

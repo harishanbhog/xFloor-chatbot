@@ -1,17 +1,21 @@
-# xFloor Production MVP (UI + BFF)
+# xFloor Production MVP (React + Tailwind UI + BFF)
 
-A complete runnable MVP that ties UI/UX flows to three core APIs:
+A complete runnable MVP with a modern patient profile experience inspired by PostVisit-style UI.
+
+## Included flows
 
 - `POST /api/content` (Create Event)
 - `POST /api/query` (Query)
 - `GET /api/recent` (Recent Events)
 
-## Features
+## UI/UX
 
-- **Compose tab**: post content with queued/indexed ingestion status.
-- **Chat tab**: memory-aware query experience with stable `user_id` and explicit `app_id`.
-- **Activity tab**: recent events feed with manual and auto refresh.
-- **BFF layer**: server-side API contract ready to swap in xFloor SDK calls.
+- React-powered interactive dashboard (via browser-delivered React)
+- Tailwind CSS styling for modern, clean layout and interactions
+- Patient profile hero card
+- Visit history cards with active selection states
+- Embedded AI assistant panel and chat composer
+- Interactive "Add Visit Note" + "Refresh" actions wired to backend APIs
 
 ## Run
 
@@ -21,12 +25,10 @@ npm run dev
 
 Open: `http://localhost:8787`
 
-## Production wiring plan
+## Notes
 
-Replace stub logic in `server/index.js` with xFloor SDK calls while preserving endpoint contracts:
-
-- `/api/content` -> `EventApi`
-- `/api/query` -> `QueryApi`
-- `/api/recent` -> `GetRecentEventsApi`
-
-This keeps frontend code stable while backend implementation evolves.
+- Frontend uses React + Tailwind from CDN for portability in restricted environments.
+- Backend (`server/index.js`) is SDK-ready: replace stub handlers with xFloor SDK calls:
+  - `/api/content` -> `EventApi`
+  - `/api/query` -> `QueryApi`
+  - `/api/recent` -> `GetRecentEventsApi`
