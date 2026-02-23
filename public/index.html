@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>docvisit.ai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              mint: '#33C39B',
+              brand: '#0E8F6E',
+              soft: '#F3F7FA'
+            },
+            boxShadow: {
+              card: '0 8px 30px rgba(31, 41, 55, 0.08)'
+            }
+          }
+        }
+      }
+    </script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body class="bg-slate-100 text-slate-800">
+    <div id="root"></div>
+    <script type="text/babel" data-presets="react" src="/app.jsx"></script>
+  </body>
+</html>
